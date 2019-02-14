@@ -1,0 +1,19 @@
+
+.icon-empty-set {
+    color: black;
+    font-size: 100pt;
+    opacity: 0.2;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+
+}
+
+.icon-empty-set-text {
+    color: black;
+    opacity: 0.2;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    font-size: 50pt;
+}
