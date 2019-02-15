@@ -11,7 +11,10 @@ require_once "lib/wrapper.php";
     $("#HomeSLink").addClass("active");
 </script>
 <div id="theBody">
-
+    <div align="center">
+        <img src="img/logo_transparent.png" width="30%" height="30%"> <br/>
+        <h3>Hello, <?php echo $user->getUsername(); ?>.</h3>
+    </div>
 </div>
 
 <div id="noAccessDiv" align="center">

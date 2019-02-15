@@ -6,7 +6,8 @@
  * Time: 20:17
  */
 require_once $_SERVER['DOCUMENT_ROOT'] . "/lib/sql/SQLConnector.php";
-
+require_once $_SERVER['DOCUMENT_ROOT'] . "/lib/user/UserPermissions.php";
+require_once $_SERVER['DOCUMENT_ROOT'] . "/lib/Utils.php";
 class WaiverWaveUser
 {
     private $id;
@@ -17,21 +18,39 @@ class WaiverWaveUser
     private $connector;
     private $exists = false;
     private $email;
+    private $apiToken;
 
     function __construct(string $id)
     {
         $this->connector = new SQLConnector();
-        $stmt = $this->getConnection()->prepare("SELECT * FROM `WW_Users` WHERE `ID` = :ID");
-        $stmt->bindParam(":ID", $id);
-        $stmt->execute();
-        foreach ($stmt->fetchAll() as $row) {
-            $this->id = $id;
-            $this->username = $row['username'];
-            $this->password = $row['password'];
-            $this->permissions = json_decode($row['permissions']);
-            $this->lastSeen = $row['lastSeen'];
-            $this->email = $row['email'];
-            $this->exists = true;
+        if (startsWith($id, "$")) {
+            $stmt = $this->getConnection()->prepare("SELECT * FROM `WW_Users` WHERE `apiToken` = :ID");
+            $stmt->bindParam(":ID", $id);
+            $stmt->execute();
+            foreach ($stmt->fetchAll() as $row) {
+                $this->id = $row['ID'];
+                $this->username = $row['username'];
+                $this->password = $row['password'];
+                $this->permissions = new UserPermissions($row['permissions']);
+                $this->lastSeen = $row['lastSeen'];
+                $this->email = $row['email'];
+                $this->exists = true;
+                $this->apiToken = $row['apiToken'];
+            }
+        } else {
+            $stmt = $this->getConnection()->prepare("SELECT * FROM `WW_Users` WHERE `ID` = :ID");
+            $stmt->bindParam(":ID", $id);
+            $stmt->execute();
+            foreach ($stmt->fetchAll() as $row) {
+                $this->id = $id;
+                $this->username = $row['username'];
+                $this->password = $row['password'];
+                $this->permissions = new UserPermissions($row['permissions']);
+                $this->lastSeen = $row['lastSeen'];
+                $this->email = $row['email'];
+                $this->exists = true;
+                $this->apiToken = $row['apiToken'];
+            }
         }
     }
 
@@ -65,11 +84,64 @@ class WaiverWaveUser
     }
 
     /**
+     * @return bool
+     */
+    public function isExistant(): bool
+    {
+        return $this->exists;
+    }
+
+    public function tryPassword(string $pass): bool
+    {
+        return password_verify($pass, $this->password) ? true : false;
+    }
+
+    function update(): bool
+    {
+        $stmt = $this->getConnection()->prepare("UPDATE `WW_Users` SET `username` = :user, `email` = :email, `password` = :pass, `permissions` = :perm WHERE `ID` = :ID");
+        $username = $this->getUsername();
+        $stmt->bindParam(":user", $username);
+        $email = $this->getEmail();
+        $stmt->bindParam(":email", $email);
+        $pass = $this->getPassword();
+        $stmt->bindParam(":pass", $pass);
+        $perms = $this->getPermissions()->toJSON();
+        $stmt->bindParam(":perm", $perms);
+        $id = $this->getId();
+        $stmt->bindParam(":ID", $id);
+        return $stmt->execute();
+    }
+
+    /**
      * @return mixed
      */
-    public function getId()
+    public function getUsername()
     {
-        return $this->id;
+        return $this->username;
+    }
+
+    /**
+     * @param mixed $username
+     */
+    public function setUsername(string $username)
+    {
+        $this->username = $username;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEmail()
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param mixed $email
+     */
+    public function setEmail($email)
+    {
+        $this->email = $email;
     }
 
     /**
@@ -91,7 +163,7 @@ class WaiverWaveUser
     /**
      * @return mixed
      */
-    public function getPermissions()
+    public function getPermissions(): UserPermissions
     {
         return $this->permissions;
     }
@@ -99,53 +171,26 @@ class WaiverWaveUser
     /**
      * @param mixed $permissions
      */
-    public function setPermissions(array $permissions)
+    public function setPermissions(UserPermissions $permissions)
     {
         $this->permissions = $permissions;
     }
-
+    public function setPermissionsFromJSON(string $permissionStr){
+        $this->setPermissions(new UserPermissions($permissionStr));
+    }
     /**
      * @return mixed
      */
-    public function getUsername()
+    public function getId()
     {
-        return $this->username;
-    }
-
-    /**
-     * @param mixed $username
-     */
-    public function setUsername(string $username)
-    {
-        $this->username = $username;
-    }
-
-    /**
-     * @return bool
-     */
-    public function isExistant(): bool
-    {
-        return $this->exists;
-    }
-
-    public function tryPassword(string $pass): bool
-    {
-        return password_verify($pass, $this->password) ? true : false;
+        return $this->id;
     }
 
     /**
      * @return mixed
      */
-    public function getEmail()
+    public function getApiToken()
     {
-        return $this->email;
-    }
-
-    /**
-     * @param mixed $email
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
+        return $this->apiToken;
     }
 }

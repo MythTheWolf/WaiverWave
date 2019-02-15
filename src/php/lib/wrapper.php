@@ -4,6 +4,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . "/lib/user/WaiverWaveUser.php";
 require_once $_SERVER['DOCUMENT_ROOT'] . "/vendor/autoload.php";
 if ($_SESSION['isLoggedIn']) {
     $user = new WaiverWaveUser($_SESSION['userId']);
+}else{
+    $user = new WaiverWaveUser("NOT A USER");
 }
 ?>
 <!doctype html>
@@ -23,6 +25,11 @@ if ($_SESSION['isLoggedIn']) {
     <link rel="stylesheet" href="css/mainStyle.css">
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
     <script src="/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="/css/iziToast.min.css">
+    <script src="/js/iziToast.min.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" href="/css/iziModal.min.css">
+    <script src="/js/iziModal.min.js" type="text/javascript"></script>
 </head>
 
 <style>
@@ -53,7 +60,7 @@ if ($_SESSION['isLoggedIn']) {
 
 
 </style>
-<body>
+
 <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
     <img src="/img/logo_transparent.png" width="4%" height="4%" class="navbar-brand">
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
@@ -73,7 +80,7 @@ if ($_SESSION['isLoggedIn']) {
                 <a class="nav-link" href="/pages/waivers.php"><i class="fa fa-book" aria-hidden="true"></i> Waivers</a>
             </li>
             <li class="nav-item" id="Users">
-                <a class="nav-link" href="/pages/waivers.php"><i class="fa fa-users" aria-hidden="true"></i> Users</a>
+                <a class="nav-link" href="/pages/admin/users.php"><i class="fa fa-users" aria-hidden="true"></i> Users</a>
             </li>
         </ul>
         <form class="form-inline my-2 my-lg-0">
@@ -119,20 +126,34 @@ if ($_SESSION['isLoggedIn']) {
             ?>
             <input class="form-control mr-sm-2" type="text" name="search" id="search"
                    placeholder="Name or @reservation id" aria-label="Search">
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="searchButton"><i class="fa fa-search"
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit" id="searchButton">Search <i class="fa fa-search"
                                                                                                     aria-hidden="true"></i>
             </button>
         </form>
     </div>
 </nav>
 <script>
+    function isJsonString(str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    }
+
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     $("#searchButton").click(function (event) {
         event.preventDefault();
-        window.location = '/pages/waivers.php?searchButton=' + $("#search").val();
+        if($("#ignoreDefaultSearch").length){
+
+           //do nothing
+        }else {
+            window.location = '/pages/waivers.php?searchButton=' + $("#search").val();
+        }
     });
 
     function getUrlVars() {
@@ -152,3 +173,4 @@ if ($_SESSION['isLoggedIn']) {
         return true;
     }
 </script>
+<body>
